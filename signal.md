@@ -98,7 +98,7 @@
 		* signo로 지정한 시그널이 set에 포함되어 있으면 1을, 포함되어 있지 않으면 0을 리턴
 	* sigprocmask
 		```C
-		int sigprocmask(int how, const sigset_t \*restrict set, sigset_t \*restrict oset);
+		int sigprocmask(int how, const sigset_t *restrict set, sigset_t *restrict oset);
 		// restrict : 프로그래머에 의해 의도된 포인터 선언방법.
 		// 특정 메모리 영역에 접근할 수 있는 포인터가 단 하나임을 보장하는 키워드
 		// 컴파일러에게 미리 알려주어 더 나은 최적화를 하게 해준다.
