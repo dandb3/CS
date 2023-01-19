@@ -38,15 +38,47 @@
 	  ```
 	  	* 보면 알겠지만 처음 old_fun = signal(SIGINT, sigint_handler); 부분에서는 시그널을 sigint_handler을 이용해서 처리하겠다 라고 선언하면서 이전 처리 방법을 old_fun에 대입한다.
 	  	* 그래서 그 이후에 SIGINT가 발생하면 sigint_handler가 실행이 되고, 그 내부에 있는 signal(SIGINT, old_fun);(signal(SIGINT, SIG_DFL)과 동일) 함수가 실행이 되어 이후에 시그널에 대해서는 기존의 방법이 실행되는 것이다.
+	* sigaction 함수
+		```C
+		#include <signal.h>
+		int	sigaction(int signo, const struct sigaction *act, struct sigaction *oact);
+		```
+		* signal 함수가 불안정적이기 때문에 이를 대체하기 위해 나온 함수이다.
+		* 만약 ```act != NULL```이라면 signum번호를 가지는 시그널에 대해서 act 함수가 설치된다.
+		* 만약 ```oldact != NULL```이라면 이전의 액션은 oldact에 저장된다.
+		* 성공 시 0, 실패하면 -1 리턴
+	* sigaction 구조체
+		```C
+		struct sigaction
+		{
+			void		(*sa_handler)(int);
+			void		(*sa_sigaction)(int, siginfo_t *, void *);
+			sigset_t	sa_mask;
+			int			sa_flags;
+			void		(*sa_restorer)(void);
+		}
+		```
+		* sa_handler : signum 번호를 가지는 시그널이 발생했을 때 실행하는 함수를 설치한다. 함수 외에도 SIG_DFL과 SIG_IGN를 지정할 수 있다.
+		* sa_mask : 
+		
+	* 시그널 집합
+		* 시그널 집합은 시그널을 비트 마스크로 표현함.
+		* 시그널 하나가 비트 하나를 가리킨다. (1이면 시그널이 설정된 것이고, 0이면 시그널이 설정되지 않음)
+		* 시그널 집합 : sigset_t 구조체
+			```C
+			typedef struct {
+				unsigned int __sigbits[4];
+			}	sigset_t;
+			```
 	* sigfillset, sigemptyset
 		```C
 		int sigfillset(sigset_t *set);
 		int sigemptyset(sigset_t *set);
 		```
 		* 신호를 간편하게 다루기 위해서 신호를 집합으로 표시하게 되었다.
-		* sigset_t : 신호들의 집합
-		* sigfillset : sigset_t라는 집합에서 모든 시그널을 추가
-		* sigemptyset : sigset_t라는 집합에서 시그널을 모두 지워줌
+		* set : 시그널의 집합
+		* sigfillset : set에서 모든 시그널을 추가 (모든 비트를 1로 바꿔줌)
+		* sigemptyset : set에서 시그널을 모두 지워줌 (모든 비트를 0으로 바꿔줌)
 		* 성공 시 0, 실패 시 -1 반환
 	* sigaddset, sigdelset
 		```C
@@ -57,15 +89,27 @@
 		* sigaddset : set에 signum 추가
 		* sigdelset : set에 signum 제거
 		* 성공 시 0, 실패 시 -1 반환
+	* sigismember
+		```C
+		#include <signal.h>
+		
+		int	sigismember(sigset_t *set, int signo);
+		```
+		* signo로 지정한 시그널이 set에 포함되어 있으면 1을, 포함되어 있지 않으면 0을 리턴
 	* sigprocmask
 		```C
-		int sigprocmask(int how, const sigset_t *set, sigset_t oldset);
+		int sigprocmask(int how, const sigset_t *restrict set, sigset_t *restrict oset);
+		// restrict : 프로그래머에 의해 의도된 포인터 선언방법.
+		// 특정 메모리 영역에 접근할 수 있는 포인터가 단 하나임을 보장하는 키워드
+		// 컴파일러에게 미리 알려주어 더 나은 최적화를 하게 해준다.
 		```
-		* 시그널을 블록시킬지 말지를 결정
+		* 시그널 집합을 사용하는 이유가 이런 sigprocmask 같은 함수를 사용하여 편리하게 관리하기 위해서이다.
+		* 시그널을 블록시킬지 말지를 결정 (예외 : SIGKILL, SIGSTOP은 블록이 안됨, 얘네들은 handler도 설정 불가)
 		* how : 어떻게 시그널을 제어할지 말해준다. 3가지 동작이 있음 : 
-			1. SIG_BLOCK : 기존에 블록된 시그널이 있다면 두 번째 인자는 set의 시그널을 추가하라는 의미
-			2. SIG_UNBLOCK : 기존의 블록된 시그널에서 set의 시그널을 제거
-			3. SIG_SETMASK : 기존의 블록된 시그널을 전부 제거시키고 새로운 set의 시그널들을 블록시킴
-		* set : how가 동작하는 방식에 따라 기존의 block된 시그널에 대해 set을 추가시킬지, 제거시킬지, 아니면 전부 set으로 설정할지를 의미. -> set : 이번에 설정할 시그널
-		* oldset : 이 전에 블록된 시그널들을 저장
+			1. SIG_BLOCK : set에 지정한 시그널 집합을 시그널 마스크에 추가한다.
+			2. SIG_UNBLOCK : set에 지정한 시그널 집합을 시그널 마스크에서 제거한다.
+			3. SIG_SETMASK : set에 지정한 시그널 집합으로 현재 시그널 마스크를 대체한다.
+		* set : 블록하거나 해제할 시그널 집합. NULL이라면 현재 블록된 시그널들을 oset에 전달하고 끝난다.
+		* oset : NULL이 아니라면 바꾸기 전에 블록된 시그널들을 저장
+		* 시그널이 블록되고 나면 해당 시그널은 전달되지 않고, 블록이 풀리게 되면 그제서야 프로세스에 전달된다.
 3. 
