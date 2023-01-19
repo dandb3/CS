@@ -6,8 +6,8 @@
 	  // int를 인자로 받는 void 함수를 리턴한다.
 	  ```
 	  int signum : 시그널 번호
-	  void (*handler)(int) 시그널을 처리할 핸들
-	  반환 : void *()(int) 이전에 설정된 시그널 핸들러
+	  void (\*handler)(int) 시그널을 처리할 핸들
+	  반환 : void \*()(int) 이전에 설정된 시그널 핸들러
 		* 시그널 처리의 3가지 방법 -> signal 함수의 2번째 인자에 들어갈 부분
 			1. 기존 방법으로 처리 (SIG_DFL)
 			2. 무시 (SIG_IGN)
@@ -98,7 +98,7 @@
 		* signo로 지정한 시그널이 set에 포함되어 있으면 1을, 포함되어 있지 않으면 0을 리턴
 	* sigprocmask
 		```C
-		int sigprocmask(int how, const sigset_t *restrict set, sigset_t *restrict oset);
+		int sigprocmask(int how, const sigset_t \*restrict set, sigset_t \*restrict oset);
 		// restrict : 프로그래머에 의해 의도된 포인터 선언방법.
 		// 특정 메모리 영역에 접근할 수 있는 포인터가 단 하나임을 보장하는 키워드
 		// 컴파일러에게 미리 알려주어 더 나은 최적화를 하게 해준다.
