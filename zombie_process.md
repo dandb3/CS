@@ -1,7 +1,7 @@
 1. Zombie Process?
 실행이 종료되었지만 아직 삭제되지 않은 프로세스.
 보통 프로세스는 exit 시스템 함수를 호출해서 프로세스를 종료시키고, 자신의 모든 자원을 해제하게 된다.
-하지만 프로세스의 exit status와 PID는 여전히 커널의 task struct에 유지된다.
+하지만 프로세스의 termination status, PID, resource usage information은 여전히 커널의 task struct에 유지된다.
 ->이유: 부모 프로세스는 wait 시스템 함수를 통해 자식 프로세스의 종료 상태에 대한 정보를 가져올 수 있다.
 
 -커널에서 사용하고 있는 task_struct 구조체
@@ -51,3 +51,6 @@ task_struct는 doubly linked list를 이루고 있다.
 wait 함수는 자식 프로세스가 종료될 때까지 현재 프로세스를 블럭킹 시키며, 자식이 종료되거나 시그널(주로 SIGCHLD)이 발생해서 시그널 핸들러를 호출할 때 return 된다.
 자식이 좀비상태라면 즉시 리턴.
 리턴하면서 함수는 프로세스의 상태값을 얻어오고, task 구조체에서 해당 프로세스의 정보를 완전히 삭제시킴.
+
+3. Zombie 고아 프로세스
+자식 프로세스가 종료되고 wait되지 않은 상태에서 부모 프로세스가 종료할 경우 init(1) 프로세스가 zombie 자식 프로세스의 부모 프로세스가 되고, 이들을 wait해서 회수해준다.
