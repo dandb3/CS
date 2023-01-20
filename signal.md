@@ -68,7 +68,63 @@
 		  }			_n;
 		  ```
 		  의 꼴로 사용되는 경우가 있다.
-		* 
+		* 만약 sa_flags에 SA_SIGINFO가 설정되어 있다면, sa_handler 대신에 sa_sigaction이 들어오는 시그널에 대해 동작하게 된다.
+		* sa_mask는 signal handler가 실행중인 동안 마스킹된 시그널들을 block 해준다.
+		* SA_NODEFER 플래그가 사용되지 않았다면 handler를 호출했던 시그널 또한 block된다.
+		* sa_flags는 시그널에 의한 동작을 바꾸어 주는데, 여러 매크로들을 bitwise or 연산을 통해 적용할 수 있다.
+			* 이 부분은 manual page 참고.
+		* sa_flags에 SA_SIGINFO가 설정되었을 경우
+			* sa_sigaction함수의 인자들
+			  ```C
+			  void	handler(int sig, siginfo_t *info, void *ucontext)
+			  {
+			  	...
+			  }
+			  ```
+				* int : handler를 호출한 시그널
+				* info : siginfo_t 구조체를 가리키는 포인터
+				* ucontext : ucontext_t 구조체를 가리키는 포인터. 자세한건 나중에.
+				* siginfo_t 구조체??
+				  ```C
+				  siginfo_t {
+					   int      si_signo;     /* Signal number */
+					   int      si_errno;     /* An errno value */
+					   int      si_code;      /* Signal code */
+					   int      si_trapno;    /* Trap number that caused
+												 hardware-generated signal
+												 (unused on most architectures) */
+					   pid_t    si_pid;       /* Sending process ID */
+					   uid_t    si_uid;       /* Real user ID of sending process */
+					   int      si_status;    /* Exit value or signal */
+					   clock_t  si_utime;     /* User time consumed */
+					   clock_t  si_stime;     /* System time consumed */
+					   union sigval si_value; /* Signal value */
+					   int      si_int;       /* POSIX.1b signal */
+					   void    *si_ptr;       /* POSIX.1b signal */
+					   int      si_overrun;   /* Timer overrun count;
+												 POSIX.1b timers */
+					   int      si_timerid;   /* Timer ID; POSIX.1b timers */
+					   void    *si_addr;      /* Memory location which caused fault */
+					   long     si_band;      /* Band event (was int in
+												 glibc 2.3.2 and earlier) */
+					   int      si_fd;        /* File descriptor */
+					   short    si_addr_lsb;  /* Least significant bit of address
+												 (since Linux 2.6.32) */
+					   void    *si_lower;     /* Lower bound when address violation
+												 occurred (since Linux 3.19) */
+					   void    *si_upper;     /* Upper bound when address violation
+												 occurred (since Linux 3.19) */
+					   int      si_pkey;      /* Protection key on PTE that caused
+												 fault (since Linux 4.6) */
+					   void    *si_call_addr; /* Address of system call instruction
+												 (since Linux 3.5) */
+					   int      si_syscall;   /* Number of attempted system call
+												 (since Linux 3.5) */
+					   unsigned int si_arch;  /* Architecture of attempted system call
+												 (since Linux 3.5) */
+				   }
+				   ```
+				   대충 시그널에 대한 정보가 이것저것 들어있다.
 		
 	* 시그널 집합
 		* 시그널 집합은 시그널을 비트 마스크로 표현함.
