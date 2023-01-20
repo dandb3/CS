@@ -64,7 +64,7 @@
 		  ```C
 		  union {
 		  	void	(*sa_handler)(int);
-			void	(*sa_sigaction)(int, siginfo_t *, void *);
+		  	void	(*sa_sigaction)(int, siginfo_t *, void *);
 		  }			_n;
 		  ```
 		  의 꼴로 사용되는 경우가 있다.
