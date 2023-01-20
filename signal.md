@@ -51,15 +51,24 @@
 		```C
 		struct sigaction
 		{
-			void		(*sa_handler)(int);
-			void		(*sa_sigaction)(int, siginfo_t *, void *);
-			sigset_t	sa_mask;
-			int			sa_flags;
-			void		(*sa_restorer)(void);
+			void		(*sa_handler)(int); // 시그널을 처리하기 위한 핸들러.
+											// SIG_DFL, SIG_IGN 또는 핸들러 함수
+			void		(*sa_sigaction)(int, siginfo_t *, void *); // 밑의 sa_flags가 SA_SIGINFO일 때
+																   // sa_handler 대신에 동작하는 핸들러
+			sigset_t	sa_mask; // 시그널을 처리하는 동안 블록화할 시그널 집합의 마스크
+			int			sa_flags; // 아래 설명 참고
+			void		(*sa_restorer)(void); // 사용하면 안 된다.
 		}
 		```
-		* sa_handler : signum 번호를 가지는 시그널이 발생했을 때 실행하는 함수를 설치한다. 함수 외에도 SIG_DFL과 SIG_IGN를 지정할 수 있다.
-		* sa_mask : 
+		* 몇몇 architecture의 경우 sa_handler와 sa_sigaction 둘이 union으로 묶여있는 경우도 존재하므로 둘 중 하나만 정의해서 사용하는 것이 좋다.
+		  ```C
+		  union {
+		  	void	(*sa_handler)(int);
+			void	(*sa_sigaction)(int, siginfo_t *, void *);
+		  }			_n;
+		  ```
+		  의 꼴로 사용되는 경우가 있다.
+		* 
 		
 	* 시그널 집합
 		* 시그널 집합은 시그널을 비트 마스크로 표현함.
